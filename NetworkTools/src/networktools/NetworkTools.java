@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import javax.swing.*;
 
 /**
@@ -14,7 +15,7 @@ import javax.swing.*;
  * ToDo Comments: 
  * Make a nicer GUI (Spacing around the components)
  * Exception on Port Scanner.
- * TextField; remove starting text and put it in labels
+ * Move timeouts to Settings tab
  * 
  * @author Michael
  */
@@ -30,8 +31,7 @@ public class NetworkTools {
         
         mainWindow.getContentPane().setLayout(new GridLayout(1,1));
         mainWindow.getContentPane().add(tabPane);
-        mainWindow.setSize(400,400);  
-        //mainWindow.setLayout(null);  
+        mainWindow.setSize(400,400);    
         mainWindow.setVisible(true);  
         mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -42,6 +42,10 @@ public class NetworkTools {
         switch(i){
             case 0: panel = IPScannerGUI(panel);
                 break;
+            case 1: panel = IPLookUPGUI(panel);
+                break;
+            case 2: panel = settingsGUI(panel);
+                break;
             default: panel.add(new JLabel(title + "not implemented"));
                 break;
         }
@@ -51,19 +55,26 @@ public class NetworkTools {
     }
     
     public static JPanel IPScannerGUI(JPanel panel){
-        //Change what is in the Text Fields to labels and make the TextFields empty
-        JTextField t1 = new JTextField("Starting IP");
-        JTextField t2 = new JTextField("Ending IP");
+        JLabel l1 = new JLabel("Starting IP");
+        JLabel l2 = new JLabel("Ending IP");
+        JLabel l3 = new JLabel("Starting Port");
+        JLabel l4 = new JLabel("Starting Port");
+        JTextField t1 = new JTextField();
+        JTextField t2 = new JTextField();
         JTextArea area = new JTextArea();
-        JTextField port1 = new JTextField("Starting Port");;
-        JTextField port2 = new JTextField("Ending Port");
+        JTextField port1 = new JTextField();
+        JTextField port2 = new JTextField();
         t1.setBounds(25,50,100,20);
+        l1.setBounds(25,25,100,20);
         t2.setBounds(200,50,100,20);
+        l2.setBounds(200,25,100,20);
         JCheckBox portScan = new JCheckBox("Scan Ports?", false);
         portScan.setBounds(100,75,100,20);
 
-        port1.setBounds(25,100,100,20);
-        port2.setBounds(200,100,100,20);
+        port1.setBounds(25,120,100,20);
+        l3.setBounds(25,95,100,20);
+        port2.setBounds(200,120,100,20);
+        l4.setBounds(200,95,100,20);
 
         area.setEditable(false);
         JScrollPane sp = new JScrollPane(area);
@@ -84,6 +95,10 @@ public class NetworkTools {
         panel.add(sp);
         panel.add(port1);
         panel.add(port2);
+        panel.add(l1);
+        panel.add(l2);
+        panel.add(l3);
+        panel.add(l4);
         return panel;
     }
     
@@ -126,6 +141,7 @@ public class NetworkTools {
                             InetAddress inet = InetAddress.getByName(ipAdd);
                             if (inet.isReachable(ipTimeOut)){
                                 area.append(ipAdd + " can be reached.\n");
+                                //Port Scanner
                                 if(portSc)
                                     for(; portS <= portE; portS++){
                                         try {
@@ -147,5 +163,61 @@ public class NetworkTools {
                 }
             }
         }
+    }
+    
+    public static JPanel IPLookUPGUI(JPanel panel){
+        JLabel l1 = new JLabel("Enter the URL");
+        JTextField text = new JTextField();
+        JButton b = new JButton("Find IP");
+        JTextArea area = new JTextArea();
+        l1.setBounds(50,50,200,20);
+        text.setBounds(50,75,200,20);
+        b.setBounds(50,100,150,20);
+        area.setEditable(false);
+        JScrollPane sp = new JScrollPane(area);
+        sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        sp.setBounds(50,150,300,100);
+        b.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e) {
+                IPLookUP(text.getText(), area, sp);
+            }
+            });
+        panel.add(l1);
+        panel.add(text);
+        panel.add(b);
+        panel.add(sp);
+        
+        return panel;
+    }
+    
+    public static void IPLookUP(String text, JTextArea area, JScrollPane sp){
+        InetAddress[] inetAddr;
+        
+        try {
+            inetAddr = InetAddress.getAllByName(text);
+            area.append(text + "\n");
+            for(InetAddress ip : inetAddr)
+                area.append(ip.getHostAddress() + "\n");
+        } catch (UnknownHostException ex) {
+            System.out.println("Exception:" + ex.getMessage());
+        }
+    }
+    
+    public static JPanel settingsGUI(JPanel panel){
+        JLabel l1 = new JLabel("LocalHost IP");
+        JTextField text = new JTextField();
+        try {
+            text.setText(InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException ex) {
+            System.out.println("Exception:" + ex.getMessage());
+        }
+        
+        l1.setBounds(50,50,200,20);
+        text.setBounds(50,75,200,20);
+        
+        panel.add(l1);
+        panel.add(text);
+        
+        return panel;
     }
 }
